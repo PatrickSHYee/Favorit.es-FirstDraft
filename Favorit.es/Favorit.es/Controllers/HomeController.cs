@@ -32,6 +32,27 @@ namespace Favorit.es.Controllers
             }
         }
 
+        private string _searchText;
+        public string SearchText
+        {
+            get
+            {
+                if (_searchText == null)
+                {
+                    _searchText = (string)Session["searchText"];
+                    if (_searchText == null)
+                    {
+                        _searchText = "Superman";
+                    }
+                }
+                return _searchText;
+            }
+            set
+            {
+                _searchText = value;
+            }
+        }
+
         #endregion
 
 
@@ -52,11 +73,12 @@ namespace Favorit.es.Controllers
         {
             //go to: https://www.flickr.com/services/apps/create/apply/ to get your api key
             //create a new instance of the Flickr API object
-            var flickr = new Flickr("api key", "api secret"); 
+            //var flickr = new Flickr("api key", "api secret"); 
+            var flickr = new Flickr("4f214803362dc800d9f7c597550ce0b2", "0b4289217fb3b990");
 
             //create a new object that represents searching for photos
             PhotoSearchOptions options = new PhotoSearchOptions();
-            options.Tags = "kittens"; //what we are searching for
+            options.Tags = this.SearchText; //what we are searching for
             options.PerPage = 25; // results to retrieve
             PhotoCollection photos = flickr.PhotosSearch(options);  //retrieve photos
             return View(photos); //pass the PhotoCollection object to the View
@@ -70,12 +92,24 @@ namespace Favorit.es.Controllers
         /// <param name="searchText"></param>
         /// <returns></returns>
         [HttpPost]
-        public ActionResult Index(string searchText)
+        public ActionResult Index(string searchText, string perPageInput)
         {
-          //this action is triggered when a user clicks the GO buttton on the main page.  The name attribute in the html input element is matched exactly to the argument name.  
+            int perPage = 0;
+            if (!int.TryParse(perPageInput, out perPage))
+            {
+                perPage = 25;
+            }
+            this.SearchText = searchText;
+            //this action is triggered when a user clicks the GO buttton on the main page.  The name attribute in the html input element is matched exactly to the argument name.  
+            var flickr = new Flickr("4f214803362dc800d9f7c597550ce0b2", "0b4289217fb3b990");
 
+            PhotoSearchOptions options = new PhotoSearchOptions();
+            options.Tags = this.SearchText;
+            options.PerPage = perPage;
+            PhotoCollection photos = flickr.PhotosSearch(options);
+            // I want to postback to index page with the searchText, so it won't default the searchText
             //return to the view a Flickr PhotoCollection using their search term instead of the default "kittens" search term used above.
-            return View();
+            return RedirectToAction("Index");
         }
 
         /// <summary>
@@ -86,7 +120,9 @@ namespace Favorit.es.Controllers
         public ActionResult Favorite(AddFavoriteViewModel addFavorite)
         {
             //add the AddFavoriteViewModel to our user favorites
+            this.UserFavorites.Add(addFavorite);
             //save the UserFavorites
+            SaveUserFavorites();
             //kick the user back to the index page.
             return RedirectToAction("index");
         }
@@ -98,7 +134,7 @@ namespace Favorit.es.Controllers
         public ActionResult MyFavorites()
         {
             //pass the UserFavorites list to the View
-            return View();
+            return View(UserFavorites);
         }
 
         /// <summary>
@@ -109,15 +145,15 @@ namespace Favorit.es.Controllers
         public ActionResult Unfavorite(string id)
         {
             //get the object from the UserFavorites based on the ID
+            var removeItem = UserFavorites.First(x => x.id == id);
             //remove that object from the UserFavorites
+            UserFavorites.Remove(removeItem);
             //save the user favorites
+            SaveUserFavorites();
+            if (this.UserFavorites.Count == 0)
+                return RedirectToAction("index");
             //kick the user back to the MyFavorites screen
             return RedirectToAction("MyFavorites");
         }
-
-     
-  
-   }
- 
-
+    }
 }

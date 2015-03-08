@@ -12,8 +12,12 @@
     <form class="form-inline" method="post" action="@Url.Action("Index", "Home")">
         <div    >
             <label for="searchText">Show me:</label>
-            <input type="text" class="form-control" id="searchText" name="searchText" placeholder="Kittens">
-            <button type="submit" class="btn btn-default">Go</button>
+            <input type="text" class="form-control" id="searchText" name="searchText" placeholder="Superman">
+            @*<select class="dropdown-toggle" id="perPageInput">
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>*@
+            <button type="submit" class="btn btn-default">Get the Photos</button>
         </div>
         
     </form>
@@ -25,9 +29,11 @@
 <div class="row">
     @foreach (var item in Model)
     {
-        <div class="col-xs-6 col-md-4">
+        <div class="col-xs-6 col-md-4 text-center">
             <a href="@Url.Action("favorite", "home", new { id = item.PhotoId, title = item.Title, url = item.Small320Url })">
                 <img class="img-thumbnail" src="@item.Small320Url" />
+                <br />
+                <label>@item.Title</label>
             </a>
         </div>
     }
